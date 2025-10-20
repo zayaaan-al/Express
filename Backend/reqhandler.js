@@ -3,6 +3,7 @@ import dataSchema from './model/model.js'
 import userSchema from './model/usermodel.js'
 import bcrypt from 'bcrypt'
 import pkg from 'jsonwebtoken'
+const {sign}=pkg;
 
 export async function addUser(req,res){
     console.log(req.body);
@@ -25,6 +26,31 @@ export async function addUser(req,res){
     console.log(error);
     
 })
+}
+
+export async function login(req,res){
+    console.log(req.body);
+    const {email,pass}=req.body;
+
+    if(!(email&&pass))
+        return res.status(500).send({msg:"fields are empty"});
+    const user=await userSchema.findOne({email})
+
+    if(!user)
+        return res.status(500).send({msg:"user not found"});
+    const success =await bcrypt.compare(pass,user.pass);
+    console.log(success);
+
+    if(success!==true)
+        return res.status(500).send({msg:"user or password not exist"});
+
+    const token=await sign({userID:user._id},process.env.JWT_KEY,{expiresIn:"24h"});
+    res.status(200).send({token})
+    
+
+    
+    
+    
 }
 
 export async function AddData(req,res){
